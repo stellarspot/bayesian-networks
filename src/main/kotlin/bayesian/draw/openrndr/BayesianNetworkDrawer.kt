@@ -1,7 +1,6 @@
-package bayesian.sample
+package bayesian.draw.openrndr
 
 import bayesian.core.BayesianNetwork
-import bayesian.core.MapProbabilityTable
 import bayesian.core.Node
 import org.openrndr.application
 import org.openrndr.color.ColorRGBa
@@ -11,7 +10,18 @@ import org.openrndr.draw.FontMap
 import org.openrndr.math.Vector2
 import java.lang.Exception
 
-fun draw(drawer: Drawer, font: FontMap, network: BayesianNetwork) {
+fun draw(bayesianNetwork: BayesianNetwork) {
+    application {
+        program {
+            val font = FontImageMap.fromUrl("file:data/fonts/Aller_Bd.ttf", 16.0)
+            extend {
+                draw(drawer, font, bayesianNetwork)
+            }
+        }
+    }
+}
+
+private fun draw(drawer: Drawer, font: FontMap, network: BayesianNetwork) {
 
     drawer.fontMap = font
 
@@ -77,42 +87,6 @@ fun draw(drawer: Drawer, font: FontMap, network: BayesianNetwork) {
             }
 
             drawArrow(i, index)
-        }
-    }
-}
-
-fun main(args: Array<String>) {
-
-    val trafficLightProbability = MapProbabilityTable(
-            mapOf(
-                    listOf("green") to 0.4,
-                    listOf("yellow") to 0.25,
-                    listOf("red") to 0.35)
-    )
-
-    val riskProbability = MapProbabilityTable(
-            mapOf(
-                    listOf("green", "high") to 0.1,
-                    listOf("green", "low") to 0.9,
-                    listOf("yellow", "high") to 0.55,
-                    listOf("yellow", "low") to 0.45,
-                    listOf("red", "high") to 0.95,
-                    listOf("red", "low") to 0.05
-            )
-    )
-
-    val trafficLight = Node("TrafficLight", listOf("green", "yellow", "red"), trafficLightProbability)
-    val risk = Node("Risk", listOf("high", "low"), riskProbability, trafficLight)
-    val bayesianNetwork = BayesianNetwork(trafficLight, risk)
-
-//    println("Risk high given traffic light is yellow: ${risk.probabilityTable[listOf("yellow", "high")]}")
-
-    application {
-        program {
-            val font = FontImageMap.fromUrl("file:data/fonts/Aller_Bd.ttf", 16.0)
-            extend {
-                bayesian.sample.draw(drawer, font, bayesianNetwork)
-            }
         }
     }
 }
