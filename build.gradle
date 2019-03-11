@@ -4,16 +4,41 @@ plugins {
 }
 
 ext.kotlin_version = '1.3.0'
+project.ext.openrndrVersion = "0.3.30"
 
 repositories {
     jcenter()
+    maven {
+        url="https://dl.bintray.com/openrndr/openrndr/"
+    }
 }
 
+
+switch (org.gradle.internal.os.OperatingSystem.current()) {
+    case org.gradle.internal.os.OperatingSystem.WINDOWS:
+        project.ext.openrndrOS = "windows"
+        break
+    case org.gradle.internal.os.OperatingSystem.LINUX:
+        project.ext.openrndrOS = "linux-x64"
+        break
+    case org.gradle.internal.os.OperatingSystem.MAC_OS:
+        project.ext.openrndrOS = "macos"
+        break
+}
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     testCompile 'junit:junit:4.11'
     testCompile "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
+
+    runtime "org.openrndr:openrndr-gl3:$openrndrVersion"
+    runtime "org.openrndr:openrndr-gl3-natives-$openrndrOS:$openrndrVersion"
+    compile "org.openrndr:openrndr-core:$openrndrVersion"
+    compile "org.openrndr:openrndr-svg:$openrndrVersion"
+    compile "org.openrndr:openrndr-animatable:$openrndrVersion"
+    compile "org.openrndr:openrndr-extensions:$openrndrVersion"
+    compile "org.openrndr:openrndr-filter:$openrndrVersion"
+    compile "org.openrndr:openrndr-ffmpeg:$openrndrVersion"
 }
 
 mainClassName = 'bayesian.sample.SampleKt'
