@@ -42,8 +42,8 @@ private fun draw(drawer: Drawer, font: FontMap, network: BayesianNetwork) {
     drawer.translate(center)
 
     fun position(i: Int) =
-            Vector2(R * Math.cos(angle + i * deltaAngle),
-                    R * Math.sin(angle + i * deltaAngle))
+            Vector2(R * Math.cos(angle - i * deltaAngle),
+                    R * Math.sin(angle - i * deltaAngle))
 
     fun drawArrow(i: Int, j: Int) {
 
