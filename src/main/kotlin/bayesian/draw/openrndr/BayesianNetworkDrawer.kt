@@ -37,9 +37,9 @@ private fun draw(drawer: Drawer, font: FontMap, nodeRadius: Int, network: Bayesi
     drawer.background(ColorRGBa.WHITE)
     val center = drawer.bounds.center
 
-    val R = 0.45 * Math.min(drawer.bounds.width, drawer.bounds.height)
     val r = nodeRadius.toDouble()
-    val rr = 0.03 * R
+    val rr = Math.max(3.0, 0.2 * r)
+    val R = 0.5 * Math.min(drawer.bounds.width, drawer.bounds.height) - r
 
     val nodes = network.nodes
     val N = nodes.size

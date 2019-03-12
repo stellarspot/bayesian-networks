@@ -13,6 +13,6 @@ class MapProbabilityTable(val map: Map<List<String>, Double>) : ProbabilityTable
 class Node(val name: String,
            val domain: List<String>,
            val probabilityTable: ProbabilityTable,
-           vararg val parents: Node)
+           vararg var parents: Node)
 
 class BayesianNetwork(vararg val nodes: Node)

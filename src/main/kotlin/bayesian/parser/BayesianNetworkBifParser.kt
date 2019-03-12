@@ -14,7 +14,8 @@ private val PATTERN_END = """^\}""".toRegex()
 private val PATTERN_NETWORK = """^network (\w+) \{""".toRegex()
 private val PATTERN_VARIABLE = """^variable (\w+) \{""".toRegex()
 private val PATTERN_VARIABLE_TYPE = """\s+type (\w+) \[ (\d+) \] \{ ((\w+,?\s)+)\};""".toRegex()
-
+private val PATTERN_PROBABILITY = """^probability \( (\w+)( \| \w+(, \w+)*)? \) \{""".toRegex()
+private val PATTERN_PROBABILITY_TABLE = """\s+table ((\d+[\.]\d+)(,\s\d+[\.]\d+)*);""".toRegex()
 
 class BayesianNetworkBifParser(val file: String) : BayesianNetworkParser {
 
@@ -94,6 +95,14 @@ class BayesianNetworkBifParser(val file: String) : BayesianNetworkParser {
 
     private fun parseProbability(line: String, reader: BufferedReader): ParserItem {
 
+        val matchResult = PATTERN_PROBABILITY.matchEntire(line)
+                ?: throw Exception("Unable to parse probability type: '$line'")
+
+        val name = matchResult.groupValues[1]
+
+        val parentsString = matchResult.groupValues[2]
+        val parents = parentsString.split(" ", "|", ",").filter { it.isNotEmpty() }
+
         while (true) {
             val nextLine = reader.readLine() ?: throw Exception("Unexpected end of file!")
 
@@ -101,6 +110,8 @@ class BayesianNetworkBifParser(val file: String) : BayesianNetworkParser {
                 break
             }
         }
-        return ProbabilityItem("UNKNOWN")
+
+
+        return ProbabilityItem(name, parents)
     }
 }
