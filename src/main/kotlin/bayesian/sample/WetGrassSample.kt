@@ -48,5 +48,5 @@ fun main(args: Array<String>) {
     val holmesGrass = Node("HolmesGrass", listOf("wet", "dry"), holmesGrassProbability, sprinkler, rain)
     val bayesianNetwork = BayesianNetwork(rain, sprinkler, watsonGrass, holmesGrass)
 
-    draw(bayesianNetwork)
+    draw(bayesianNetwork, title = "Rain and Wet Grass sample")
 }

@@ -10,8 +10,16 @@ import org.openrndr.draw.FontMap
 import org.openrndr.math.Vector2
 import java.lang.Exception
 
-fun draw(bayesianNetwork: BayesianNetwork) {
+fun draw(bayesianNetwork: BayesianNetwork,
+         title: String = "Bayesian Network",
+         width: Int = 800,
+         height: Int = 600) {
     application {
+        configure {
+            this.title = title
+            this.width = width
+            this.height = height
+        }
         program {
             val font = FontImageMap.fromUrl("file:data/fonts/Aller_Bd.ttf", 16.0)
             extend {
