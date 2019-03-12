@@ -13,7 +13,8 @@ import java.lang.Exception
 fun draw(bayesianNetwork: BayesianNetwork,
          title: String = "Bayesian Network",
          width: Int = 800,
-         height: Int = 600) {
+         height: Int = 600,
+         nodeRadius: Int = 50) {
     application {
         configure {
             this.title = title
@@ -23,22 +24,21 @@ fun draw(bayesianNetwork: BayesianNetwork,
         program {
             val font = FontImageMap.fromUrl("file:data/fonts/Aller_Bd.ttf", 16.0)
             extend {
-                draw(drawer, font, bayesianNetwork)
+                draw(drawer, font, nodeRadius, bayesianNetwork)
             }
         }
     }
 }
 
-private fun draw(drawer: Drawer, font: FontMap, network: BayesianNetwork) {
+private fun draw(drawer: Drawer, font: FontMap, nodeRadius: Int, network: BayesianNetwork) {
 
     drawer.fontMap = font
-
 
     drawer.background(ColorRGBa.WHITE)
     val center = drawer.bounds.center
 
-    val R = 0.4 * Math.min(drawer.bounds.width, drawer.bounds.height)
-    val r = 0.2 * R
+    val R = 0.45 * Math.min(drawer.bounds.width, drawer.bounds.height)
+    val r = nodeRadius.toDouble()
     val rr = 0.03 * R
 
     val nodes = network.nodes
