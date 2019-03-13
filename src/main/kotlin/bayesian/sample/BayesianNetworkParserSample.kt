@@ -61,5 +61,5 @@ fun main(args: Array<String>) {
     }
 
     val network = BayesianNetwork(*nodesList.toTypedArray())
-    draw(network, "Parsed Bayesian Network", 1000, 600, 10)
+    draw(network, "Parsed Bayesian Network", 1000, 600, 30)
 }
