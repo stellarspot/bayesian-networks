@@ -1,15 +1,19 @@
-package bayesian
+package bayesian.beliefpropagation
 
 import bayesian.core.BayesianNetwork
 import bayesian.core.Evidence
+import org.nd4j.linalg.api.ndarray.INDArray
 
-data class VariableNode(val name: String, var domainSize: Int = -1, val factors: MutableList<FactorNode> = mutableListOf()) {
+data class VariableNode(val name: String, var domainSize: Int = -1, val edges: MutableList<VariableFactorEdge> = mutableListOf()) {
     override fun toString() = "$name[$domainSize]"
 }
 
-data class FactorNode(val variables: MutableList<VariableNode> = mutableListOf()) {
-    override fun toString() = variables.map { it.name }.joinToString("-")
+data class FactorNode(val edges: MutableList<FactorVariableEdge> = mutableListOf()) {
+    override fun toString() = edges.map { it.variable.name }.joinToString("-")
 }
+
+data class VariableFactorEdge(val factor: FactorNode, var message: INDArray? = null)
+data class FactorVariableEdge(val variable: VariableNode, var message: INDArray? = null)
 
 class FactorGraph(bayesianNetwork: BayesianNetwork) {
     val factors = mutableListOf<FactorNode>()
@@ -22,10 +26,10 @@ class FactorGraph(bayesianNetwork: BayesianNetwork) {
             variablesMap[node.name] = variable
 
             val factor = FactorNode()
-            factor.variables.add(variable)
+            factor.edges.add(FactorVariableEdge(variable))
             for (parent in node.parents) {
                 val v = variablesMap.getOrPut(parent.name) { VariableNode(parent.name) }
-                factor.variables.add(v)
+                factor.edges.add(FactorVariableEdge(v))
             }
             factors.add(factor)
         }
