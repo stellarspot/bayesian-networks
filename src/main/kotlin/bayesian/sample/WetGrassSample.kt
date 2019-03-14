@@ -1,6 +1,6 @@
 package bayesian.sample
 
-import bayesian.beliefPropagation
+import bayesian.beliefpropagation.beliefPropagation
 import bayesian.core.BayesianNetwork
 import bayesian.core.Evidence
 import bayesian.core.MapProbabilityTable
@@ -49,6 +49,17 @@ fun main(args: Array<String>) {
     val watsonGrass = Node("WatsonGrass", listOf("wet", "dry"), watsonGrassProbability, rain)
     val holmesGrass = Node("HolmesGrass", listOf("wet", "dry"), holmesGrassProbability, sprinkler, rain)
     val bayesianNetwork = BayesianNetwork(rain, sprinkler, watsonGrass, holmesGrass)
+
+    val marginalizationDivisor = bayesianNetwork.beliefPropagation(
+            Evidence(holmesGrass.name, "wet"),
+            Evidence(rain.name, "true"))
+
+    val marginalizationDividend = bayesianNetwork.beliefPropagation(
+            Evidence(holmesGrass.name, "wet"),
+            Evidence(rain.name, "true"))
+
+    val probabilityRainGivenHolmesGrass = marginalizationDividend / marginalizationDivisor
+    println("Rain given Holmes Grass probability: $probabilityRainGivenHolmesGrass")
 
     draw(bayesianNetwork, title = "Rain and Wet Grass sample")
 }

@@ -3,14 +3,18 @@ package bayesian.beliefpropagation
 import bayesian.core.BayesianNetwork
 import bayesian.core.Evidence
 import bayesian.core.Node
+import bayesian.util.takeTensor
 import org.nd4j.linalg.api.ndarray.INDArray
 import org.nd4j.linalg.factory.Nd4j
 
-data class VariableNode(val name: String, var domainSize: Int = -1, val edges: MutableList<VariableFactorEdge> = mutableListOf()) {
+data class VariableNode(val name: String,
+                        var domainSize: Int = -1,
+                        val edges: MutableList<VariableFactorEdge> = mutableListOf(),
+                        var evidenceIndex: Int = -1) {
     override fun toString() = "$name[$domainSize]"
 }
 
-data class FactorNode(val tensor: INDArray,
+data class FactorNode(var tensor: INDArray,
                       val edges: MutableList<FactorVariableEdge> = mutableListOf()) {
     override fun toString() = edges.map { it.variable.name }.joinToString("-")
 }
@@ -48,9 +52,9 @@ private fun getTensor(node: Node): INDArray {
     return Nd4j.create(vector.toDoubleArray(), domains.map { it.size }.toIntArray())
 }
 
-class FactorGraph(bayesianNetwork: BayesianNetwork) {
-    val factors = mutableListOf<FactorNode>()
-    val variablesMap = mutableMapOf<String, VariableNode>()
+class FactorGraph(val bayesianNetwork: BayesianNetwork) {
+    private val factors = mutableListOf<FactorNode>()
+    private val variablesMap = mutableMapOf<String, VariableNode>()
 
     init {
 
@@ -63,12 +67,40 @@ class FactorGraph(bayesianNetwork: BayesianNetwork) {
             variablesMap[node.name] = variable
 
             val factor = FactorNode(getTensor(node))
-            factor.edges.add(FactorVariableEdge(variable))
             for (parent in node.parents) {
                 val v = getVariable(parent.name)
                 factor.edges.add(FactorVariableEdge(v))
             }
+            factor.edges.add(FactorVariableEdge(variable))
             factors.add(factor)
+        }
+    }
+
+    fun applyEvidences(vararg evidences: Evidence) {
+        for (evidence in evidences) {
+            val name = evidence.name
+            val variable = variablesMap[name]!!
+            variable.domainSize = 1
+            val node = bayesianNetwork[name]!!
+
+            val evidenceIndex = node.domain.indexOf(evidence.value)
+            if (evidenceIndex < 0) {
+                throw Exception("Node $name does not contain value ${evidence.value}")
+            }
+            variable.evidenceIndex = evidenceIndex
+        }
+
+        for (factor in factors) {
+            var tensor = factor.tensor
+            val variables = factor.edges.map { it.variable }
+            for (index in (variables.size - 1 downTo 0)) {
+                val variable = variables[index]
+                val evidenceIndex = variable.evidenceIndex
+                if (evidenceIndex != -1) {
+                    tensor = takeTensor(tensor, index, evidenceIndex)
+                }
+            }
+            factor.tensor = tensor
         }
     }
 
@@ -85,6 +117,7 @@ class FactorGraph(bayesianNetwork: BayesianNetwork) {
 
 fun BayesianNetwork.beliefPropagation(vararg evidences: Evidence): Double {
     val graph = FactorGraph(this)
-    graph.dump()
-    return 0.0
+    graph.applyEvidences(*evidences)
+    // graph.dump()
+    return 1.0
 }
