@@ -11,12 +11,12 @@ data class VariableNode(val name: String,
                         var domainSize: Int = -1,
                         val edges: MutableList<VariableFactorEdge> = mutableListOf(),
                         var evidenceIndex: Int = -1) {
-    override fun toString() = "$name[$domainSize]"
+    override fun toString() = "Variable-$name"
 }
 
 data class FactorNode(var tensor: INDArray,
                       val edges: MutableList<FactorVariableEdge> = mutableListOf()) {
-    override fun toString() = edges.map { it.variable.name }.joinToString("-")
+    override fun toString() = "Factor-" + edges.map { it.variable.name }.joinToString("-")
 }
 
 data class VariableFactorEdge(val factor: FactorNode, var message: INDArray? = null)
@@ -67,9 +67,11 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
             variablesMap[node.name] = variable
 
             val factor = FactorNode(getTensor(node))
+            variable.edges.add(VariableFactorEdge(factor))
             for (parent in node.parents) {
                 val v = getVariable(parent.name)
                 factor.edges.add(FactorVariableEdge(v))
+                v.edges.add(VariableFactorEdge(factor))
             }
             factor.edges.add(FactorVariableEdge(variable))
             factors.add(factor)
@@ -104,6 +106,50 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
         }
     }
 
+    fun sendMessages() {
+        var finished = false
+
+        val variables = variablesMap.values
+        while (!finished) {
+            for (variable in variables) {
+                for (edge in variable.edges) {
+                    if (edge.message == null) {
+                        finished = false
+                        sendMessage(variable, edge)
+                    }
+                }
+            }
+            for (factor in factors) {
+                for (edge in factor.edges) {
+                    if (edge.message == null) {
+                        finished = false
+                        sendMessage(factor, edge)
+                    }
+                }
+            }
+
+            finished = true
+        }
+    }
+
+    private fun sendMessage(variable: VariableNode, edge: VariableFactorEdge) {
+        println("send message(v->f): ${variable.name}, ${edge.factor}")
+        val edges = variable.edges
+        if (edges.size == 1) {
+            edge.message = Nd4j.ones(variable.domainSize)
+            println("  initial message: ${edge.message}")
+        }
+    }
+
+    private fun sendMessage(factor: FactorNode, edge: FactorVariableEdge) {
+        println("send message(f->v): ${factor}, ${edge.variable}")
+        val edges = factor.edges
+        if (edges.size == 1) {
+            edge.message = factor.tensor
+            println("  initial message: ${edge.message}")
+        }
+    }
+
     fun dump() {
         for (variable in variablesMap.values) {
             println("variable: $variable")
@@ -119,5 +165,6 @@ fun BayesianNetwork.beliefPropagation(vararg evidences: Evidence): Double {
     val graph = FactorGraph(this)
     graph.applyEvidences(*evidences)
     // graph.dump()
+    graph.sendMessages()
     return 1.0
 }
