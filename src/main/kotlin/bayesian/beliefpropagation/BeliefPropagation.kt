@@ -21,14 +21,18 @@ class FactorGraph(bayesianNetwork: BayesianNetwork) {
 
     init {
 
+        fun getVariable(name: String) =
+                variablesMap.getOrPut(name) { VariableNode(name) }
+
         for (node in bayesianNetwork.nodes) {
-            val variable = VariableNode(node.name, node.domain.size)
+            val variable = getVariable(node.name)
+            variable.domainSize = node.domain.size
             variablesMap[node.name] = variable
 
             val factor = FactorNode()
             factor.edges.add(FactorVariableEdge(variable))
             for (parent in node.parents) {
-                val v = variablesMap.getOrPut(parent.name) { VariableNode(parent.name) }
+                val v = getVariable(parent.name)
                 factor.edges.add(FactorVariableEdge(v))
             }
             factors.add(factor)
