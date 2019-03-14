@@ -110,7 +110,11 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
         var finished = false
 
         val variables = variablesMap.values
-        while (!finished) {
+        var step = 0
+        while (!finished && step++ < 2) {
+
+            println("step: $step")
+
             for (variable in variables) {
                 for (edge in variable.edges) {
                     if (edge.message == null) {
@@ -127,17 +131,37 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
                     }
                 }
             }
-
-            finished = true
         }
     }
 
     private fun sendMessage(variable: VariableNode, edge: VariableFactorEdge) {
-        println("send message(v->f): ${variable.name}, ${edge.factor}")
+        println("send message(v->f): $variable, ${edge.factor}")
         val edges = variable.edges
         if (edges.size == 1) {
             edge.message = Nd4j.ones(variable.domainSize)
             println("  initial message: ${edge.message}")
+        } else {
+
+            val inEdges = edges
+                    .filter { it != edge }
+                    .map {
+                        it.factor.edges.find { e -> e.variable == variable }
+                    }.filterNotNull()
+
+            val canSendMessage = inEdges.all { it.message != null }
+            if (canSendMessage) {
+                val tensors = inEdges
+                        .map { it.message }
+                        .filterNotNull()
+                assert(tensors.size == inEdges.size)
+
+                var tensor = Nd4j.ones(variable.domainSize)
+                for (t in tensors) {
+                    tensor = tensor.mul(t)
+                }
+                edge.message = tensor
+                println("  message:\n${edge.message}")
+            }
         }
     }
 
@@ -164,7 +188,7 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
 fun BayesianNetwork.beliefPropagation(vararg evidences: Evidence): Double {
     val graph = FactorGraph(this)
     graph.applyEvidences(*evidences)
-    // graph.dump()
+    graph.dump()
     graph.sendMessages()
     return 1.0
 }
