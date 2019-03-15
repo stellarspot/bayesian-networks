@@ -3,7 +3,10 @@ package bayesian.beliefpropagation
 import bayesian.core.BayesianNetwork
 import bayesian.core.Evidence
 import bayesian.core.Node
+import bayesian.util.initialMessage
+import bayesian.util.multiplyMessage
 import bayesian.util.takeTensor
+import bayesian.util.transposeLastAxisToFirst
 import org.nd4j.linalg.api.ndarray.INDArray
 import org.nd4j.linalg.factory.Nd4j
 
@@ -139,7 +142,7 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
         println("send message(v->f): $variable, ${edge.factor}")
         val edges = variable.edges
         if (edges.size == 1) {
-            edge.message = Nd4j.ones(variable.domainSize)
+            edge.message = initialMessage(variable.domainSize)
             println("  initial message: ${edge.message}")
         } else {
 
@@ -157,7 +160,7 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
                         .filterNotNull()
                 assert(tensors.size == inEdges.size)
 
-                var tensor = Nd4j.ones(variable.domainSize)
+                var tensor = initialMessage(variable.domainSize)
                 for (t in tensors) {
                     tensor = tensor.mul(t)
                 }
@@ -186,24 +189,21 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
                     .all { it.message != null }
 
             if (canSendMessage) {
-                println("  can send message")
                 var tensor = factor.tensor
-                println("  tensor ${tensor.shape().contentToString()}:\n$tensor")
 
                 for (i in (edges.size - 1 downTo 0)) {
                     val e = inEdges[i]
                     if (i == index) {
                         if (i != 0) {
-                            println("  change index: [$i]")
+                            tensor = transposeLastAxisToFirst(tensor)
                         }
                     } else {
                         val message = e.message!!
-                        println("  message[$i] input ${message.shape().contentToString()}:\n$message")
-                        tensor = tensor.mul(message)
-                        println("  message[$i] result ${tensor.shape().contentToString()}:\n$tensor")
+                        tensor = multiplyMessage(tensor, message)
                     }
                 }
                 edge.message = tensor
+                println("  message:\n${tensor}")
             }
 
         }

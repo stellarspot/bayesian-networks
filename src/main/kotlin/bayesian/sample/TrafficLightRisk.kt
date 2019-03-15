@@ -31,5 +31,8 @@ fun main(args: Array<String>) {
     val risk = Node("Risk", listOf("high", "low"), riskProbability, trafficLight)
     val bayesianNetwork = BayesianNetwork(trafficLight, risk)
 
+    val marginalizationDivisor = bayesianNetwork.beliefPropagation(
+            Evidence(risk.name, "high"))
+
     draw(bayesianNetwork)
 }
