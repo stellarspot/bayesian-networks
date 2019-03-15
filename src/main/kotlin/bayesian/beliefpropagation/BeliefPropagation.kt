@@ -113,6 +113,7 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
         var step = 0
         while (!finished && step++ < 2) {
 
+            println()
             println("step: $step")
 
             for (variable in variables) {
@@ -124,10 +125,10 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
                 }
             }
             for (factor in factors) {
-                for (edge in factor.edges) {
+                for ((index, edge) in factor.edges.withIndex()) {
                     if (edge.message == null) {
                         finished = false
-                        sendMessage(factor, edge)
+                        sendMessage(factor, edge, index)
                     }
                 }
             }
@@ -147,6 +148,7 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
                     .map {
                         it.factor.edges.find { e -> e.variable == variable }
                     }.filterNotNull()
+            assert(inEdges.size == edges.size)
 
             val canSendMessage = inEdges.all { it.message != null }
             if (canSendMessage) {
@@ -165,12 +167,45 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
         }
     }
 
-    private fun sendMessage(factor: FactorNode, edge: FactorVariableEdge) {
+    private fun sendMessage(factor: FactorNode, edge: FactorVariableEdge, index: Int) {
         println("send message(f->v): ${factor}, ${edge.variable}")
         val edges = factor.edges
         if (edges.size == 1) {
             edge.message = factor.tensor
             println("  initial message: ${edge.message}")
+        } else {
+            val inEdges = edges
+                    .map {
+                        it.variable.edges.find { e -> e.factor == factor }
+                    }.filterNotNull()
+
+            assert(inEdges.size == edges.size)
+
+            val canSendMessage = inEdges
+                    .filterIndexed { i, _ -> i != index }
+                    .all { it.message != null }
+
+            if (canSendMessage) {
+                println("  can send message")
+                var tensor = factor.tensor
+                println("  tensor ${tensor.shape().contentToString()}:\n$tensor")
+
+                for (i in (edges.size - 1 downTo 0)) {
+                    val e = inEdges[i]
+                    if (i == index) {
+                        if (i != 0) {
+                            println("  change index: [$i]")
+                        }
+                    } else {
+                        val message = e.message!!
+                        println("  message[$i] input ${message.shape().contentToString()}:\n$message")
+                        tensor = tensor.mul(message)
+                        println("  message[$i] result ${tensor.shape().contentToString()}:\n$tensor")
+                    }
+                }
+                edge.message = tensor
+            }
+
         }
     }
 

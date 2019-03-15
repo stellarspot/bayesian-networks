@@ -14,5 +14,10 @@ fun takeTensor(tensor: INDArray,
     }
 
     val dimensions = (0 until size).filter { it != index }.toIntArray()
-    return tensor.tensorAlongDimension(evidenceIndex, *dimensions)
+    val subTensor = tensor.tensorAlongDimension(evidenceIndex, *dimensions)
+    val reshapeDimension = tensor.shape().mapIndexed { i, dimension ->
+        if (i == index) 1 else dimension.toInt()
+    }.toIntArray()
+
+    return subTensor.reshape(reshapeDimension)
 }

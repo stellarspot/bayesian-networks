@@ -50,16 +50,16 @@ fun main(args: Array<String>) {
     val holmesGrass = Node("HolmesGrass", listOf("wet", "dry"), holmesGrassProbability, sprinkler, rain)
     val bayesianNetwork = BayesianNetwork(rain, sprinkler, watsonGrass, holmesGrass)
 
-    val marginalizationDivisor = bayesianNetwork.beliefPropagation(
-            Evidence(holmesGrass.name, "wet"),
-            Evidence(rain.name, "true"))
-
-    val marginalizationDividend = bayesianNetwork.beliefPropagation(
-            Evidence(holmesGrass.name, "wet"),
-            Evidence(rain.name, "true"))
-
-    val probabilityRainGivenHolmesGrass = marginalizationDividend / marginalizationDivisor
-    println("Rain given Holmes Grass probability: $probabilityRainGivenHolmesGrass")
+//    val marginalizationDivisor = bayesianNetwork.beliefPropagation(
+//            Evidence(holmesGrass.name, "wet"),
+//            Evidence(rain.name, "true"))
+//
+//    val marginalizationDividend = bayesianNetwork.beliefPropagation(
+//            Evidence(holmesGrass.name, "wet"),
+//            Evidence(rain.name, "true"))
+//
+//    val probabilityRainGivenHolmesGrass = marginalizationDividend / marginalizationDivisor
+//    println("Rain given Holmes Grass probability: $probabilityRainGivenHolmesGrass")
 
     draw(bayesianNetwork, title = "Rain and Wet Grass sample")
 }

@@ -10,10 +10,9 @@ project.ext.deeplearning4j_version = "1.0.0-beta3"
 repositories {
     jcenter()
     maven {
-        url="https://dl.bintray.com/openrndr/openrndr/"
+        url = "https://dl.bintray.com/openrndr/openrndr/"
     }
 }
-
 
 switch (org.gradle.internal.os.OperatingSystem.current()) {
     case org.gradle.internal.os.OperatingSystem.WINDOWS:
