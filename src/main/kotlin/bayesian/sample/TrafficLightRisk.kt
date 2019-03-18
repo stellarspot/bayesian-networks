@@ -1,6 +1,6 @@
 package bayesian.sample
 
-import bayesian.beliefpropagation.beliefPropagation
+import bayesian.core.beliefPropagation
 import bayesian.core.BayesianNetwork
 import bayesian.core.Evidence
 import bayesian.core.MapProbabilityTable

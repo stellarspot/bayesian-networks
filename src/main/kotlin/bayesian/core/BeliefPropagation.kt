@@ -1,8 +1,5 @@
-package bayesian.beliefpropagation
+package bayesian.core
 
-import bayesian.core.BayesianNetwork
-import bayesian.core.Evidence
-import bayesian.core.Node
 import bayesian.util.initialMessage
 import bayesian.util.multiplyMessage
 import bayesian.util.takeTensor
