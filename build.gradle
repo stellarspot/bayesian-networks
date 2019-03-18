@@ -6,6 +6,8 @@ plugins {
 project.ext.kotlin_version = '1.3.0'
 project.ext.openrndrVersion = "0.3.30"
 project.ext.deeplearning4j_version = "1.0.0-beta3"
+project.ext.slf4j_version = "1.7.25"
+project.ext.logback_version = "1.2.3"
 
 repositories {
     jcenter()
@@ -42,6 +44,12 @@ dependencies {
     compile "org.openrndr:openrndr-extensions:$openrndrVersion"
     compile "org.openrndr:openrndr-filter:$openrndrVersion"
     compile "org.openrndr:openrndr-ffmpeg:$openrndrVersion"
+
+    compile "org.slf4j:slf4j-api:$slf4j_version"
+    compile "ch.qos.logback:logback-classic:$logback_version"
+    compile "ch.qos.logback:logback-core:$logback_version"
+
+
 }
 
 mainClassName = 'bayesian.sample.SampleKt'
