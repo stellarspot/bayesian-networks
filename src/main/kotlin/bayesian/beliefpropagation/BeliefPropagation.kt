@@ -151,7 +151,7 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
                     .map {
                         it.factor.edges.find { e -> e.variable == variable }
                     }.filterNotNull()
-            assert(inEdges.size == edges.size)
+//            assert(inEdges.size == edges.size)
 
             val canSendMessage = inEdges.all { it.message != null }
             if (canSendMessage) {
@@ -209,6 +209,24 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
         }
     }
 
+
+    fun calculateMarginalization(vararg evidences: Evidence): Double {
+
+        val evidence = evidences[0]
+
+        val variable = variablesMap.getOrElse(evidence.name) {
+            throw Exception("There is no node for evidence: ${evidence.name}")
+        }
+
+        val edge = variable.edges[0]
+        val messageOut = edge.message!!
+        val messageIn = edge.factor.edges.find { it.variable.name == variable.name }!!.message!!
+
+        val result = multiplyMessage(messageIn, messageOut).getDouble(0)
+
+        return result
+    }
+
     fun dump() {
         for (variable in variablesMap.values) {
             println("variable: $variable")
@@ -221,9 +239,14 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
 }
 
 fun BayesianNetwork.beliefPropagation(vararg evidences: Evidence): Double {
+
+    if (evidences.isEmpty()) {
+        return 1.0
+    }
+
     val graph = FactorGraph(this)
     graph.applyEvidences(*evidences)
     graph.dump()
     graph.sendMessages()
-    return 1.0
+    return graph.calculateMarginalization(*evidences)
 }

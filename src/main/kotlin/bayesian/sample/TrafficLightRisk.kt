@@ -34,5 +34,14 @@ fun main(args: Array<String>) {
     val marginalizationDivisor = bayesianNetwork.beliefPropagation(
             Evidence(risk.name, "high"))
 
+    val marginalizationDividend = bayesianNetwork.beliefPropagation(
+            Evidence(trafficLight.name, "yellow"),
+            Evidence(risk.name, "high"))
+
+
+    val probabilityTrafficLihghtGivenRisk = marginalizationDividend / marginalizationDivisor
+
+    println("Probability Traffic Light is yellow given Risk is High: $probabilityTrafficLihghtGivenRisk")
+
     draw(bayesianNetwork)
 }
