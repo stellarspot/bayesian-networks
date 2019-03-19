@@ -8,6 +8,8 @@ interface ProbabilityTable {
 
 class MapProbabilityTable(val map: Map<List<String>, Double>) : ProbabilityTable {
     override fun get(key: List<String>) = map.getOrElse(key) { throw Exception("Unknown key: ${key.joinToString()}") }
+
+    override fun toString() = map.toString()
 }
 
 data class Evidence(val name: String, val value: String)

@@ -30,14 +30,27 @@ fun main(args: Array<String>) {
         if (it is VariableItem) {
             variablesMap[it.name] = it
         } else if (it is ProbabilityItem) {
+
             val name = it.name
             val domain = variablesMap.getOrElse(name) {
                 throw Exception("Variable is absent: $name")
             }.domain
 
+            val probabilityTable = mutableMapOf<List<String>, Double>()
+            for (probItem in it.probabilities) {
+                val args = probItem.arguments
+                val values = probItem.values
+
+                for ((i, domainArg) in domain.withIndex()) {
+                    val argsWithDomain = args.toMutableList()
+                    argsWithDomain.add(domainArg)
+                    probabilityTable[argsWithDomain] = values[i]
+                }
+            }
+
             val node = Node(it.name,
                     domain,
-                    MapProbabilityTable(mapOf()))
+                    MapProbabilityTable(probabilityTable))
 
             nodesMap[name] = NodeItem(it, node)
             nodesList.add(node)

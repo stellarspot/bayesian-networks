@@ -15,7 +15,11 @@ private val PATTERN_NETWORK = """^network (\w+) \{""".toRegex()
 private val PATTERN_VARIABLE = """^variable (\w+) \{""".toRegex()
 private val PATTERN_VARIABLE_TYPE = """\s+type (\w+) \[ (\d+) \] \{ ((\w+,?\s)+)\};""".toRegex()
 private val PATTERN_PROBABILITY = """^probability \( (\w+)( \| \w+(, \w+)*)? \) \{""".toRegex()
-private val PATTERN_PROBABILITY_TABLE = """\s+table ((\d+[\.]\d+)(,\s\d+[\.]\d+)*);""".toRegex()
+
+private val PATTERN_NUMBER = """\d+[\.]\d+"""
+private val PATTERN_PROBABILITY_TABLE = """\s+table (($PATTERN_NUMBER)(,\s$PATTERN_NUMBER)*);""".toRegex()
+private val PATTERN_PROBABILITY_ARGUMENTS_ARGS = """\s+\(((\w+)(,\s\w+)*)\).*;""".toRegex()
+private val PATTERN_PROBABILITY_ARGUMENTS_VALS = """\s+\(.*\) (($PATTERN_NUMBER)(,\s$PATTERN_NUMBER)*);""".toRegex()
 
 class BayesianNetworkBifParser(val file: String) : BayesianNetworkParser {
 
@@ -95,6 +99,8 @@ class BayesianNetworkBifParser(val file: String) : BayesianNetworkParser {
 
     private fun parseProbability(line: String, reader: BufferedReader): ParserItem {
 
+        println("parse probability: $line")
+
         val matchResult = PATTERN_PROBABILITY.matchEntire(line)
                 ?: throw Exception("Unable to parse probability type: '$line'")
 
@@ -103,15 +109,42 @@ class BayesianNetworkBifParser(val file: String) : BayesianNetworkParser {
         val parentsString = matchResult.groupValues[2]
         val parents = parentsString.split(" ", "|", ",").filter { it.isNotEmpty() }
 
+        val probabilities = mutableListOf<ProbabilityTableItem>()
+
         while (true) {
             val nextLine = reader.readLine() ?: throw Exception("Unexpected end of file!")
 
             if (PATTERN_END.matches(nextLine)) {
                 break
             }
+
+            val tableMatch = PATTERN_PROBABILITY_TABLE.matchEntire(nextLine)
+
+            if (tableMatch != null) {
+                val values = tableMatch
+                        .groupValues[1]
+                        .split(", ")
+                        .map { it.toDouble() }
+                probabilities.add(ProbabilityTableItem(emptyList(), values))
+                continue
+            }
+
+            val argsMatch = PATTERN_PROBABILITY_ARGUMENTS_ARGS.matchEntire(nextLine)
+
+            if (argsMatch != null) {
+
+                val args = argsMatch.groupValues[1].split(", ")
+
+                val valsMatch = PATTERN_PROBABILITY_ARGUMENTS_VALS.matchEntire(nextLine)!!
+                val vals = valsMatch
+                        .groupValues[1]
+                        .split(", ")
+                        .map { it.toDouble() }
+
+                probabilities.add(ProbabilityTableItem(args, vals))
+            }
         }
 
-
-        return ProbabilityItem(name, parents)
+        return ProbabilityItem(name, parents, probabilities)
     }
 }
