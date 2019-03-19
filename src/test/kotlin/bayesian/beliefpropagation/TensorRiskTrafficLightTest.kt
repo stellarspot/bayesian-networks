@@ -1,7 +1,7 @@
 package bayesian.beliefpropagation
 
 import bayesian.core.*
-import bayesian.util.epsilon
+import bayesian.util.assertDoubleEquals
 import org.junit.Assert
 import org.junit.Test
 
@@ -34,12 +34,12 @@ class TensorRiskTrafficLightTest {
                 Evidence(trafficLight.name, "yellow"),
                 Evidence(risk.name, "high"))
 
-        Assert.assertEquals(0.1375, marginalizationDividend, epsilon)
+        assertDoubleEquals(0.1375, marginalizationDividend)
 
         val marginalizationDivisor = bayesianNetwork.marginalize(
                 Evidence(risk.name, "high"))
 
-        Assert.assertEquals(0.51, marginalizationDivisor, epsilon)
+        assertDoubleEquals(0.51, marginalizationDivisor)
     }
 
     @Test
@@ -50,16 +50,16 @@ class TensorRiskTrafficLightTest {
                 Evidence(trafficLight.name, "yellow"),
                 Evidence(risk.name, "high"))
 
-        Assert.assertEquals(0.1375, marginalizationDividend, epsilon)
+        assertDoubleEquals(0.1375, marginalizationDividend)
 
         val marginalizationDivisor = bayesianNetwork.beliefPropagation(
                 Evidence(risk.name, "high"))
 
-        Assert.assertEquals(0.51, marginalizationDivisor, epsilon)
+        assertDoubleEquals(0.51, marginalizationDivisor)
 
 
         val probabilityTrafficLihghtGivenRisk = marginalizationDividend / marginalizationDivisor
 
-        Assert.assertEquals(0.27, probabilityTrafficLihghtGivenRisk, epsilon)
+        assertDoubleEquals(0.27, probabilityTrafficLihghtGivenRisk)
     }
 }

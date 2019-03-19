@@ -2,6 +2,7 @@ package bayesian.parser
 
 import java.io.BufferedReader
 import java.io.File
+import java.net.URL
 
 enum class ElementType {
     NETWORK,
@@ -21,10 +22,12 @@ private val PATTERN_PROBABILITY_TABLE = """\s+table (($PATTERN_NUMBER)(,\s$PATTE
 private val PATTERN_PROBABILITY_ARGUMENTS_ARGS = """\s+\(((\w+)(,\s\w+)*)\).*;""".toRegex()
 private val PATTERN_PROBABILITY_ARGUMENTS_VALS = """\s+\(.*\) (($PATTERN_NUMBER)(,\s$PATTERN_NUMBER)*);""".toRegex()
 
-class BayesianNetworkBifParser(val file: String) : BayesianNetworkParser {
+class BayesianNetworkBifParser(val url: URL) : BayesianNetworkParser {
 
     override fun parse(consumer: (ParserItem) -> Unit) {
-        File(file)
+
+        url
+                .openStream()
                 .bufferedReader(Charsets.UTF_8)
                 .use {
                     while (true) {
@@ -87,7 +90,7 @@ class BayesianNetworkBifParser(val file: String) : BayesianNetworkParser {
                     ?: throw Exception("Unable to parse variable type: '$nextLine'")
 
             val domainString = matchTypeResult.groupValues[3]
-            domain = domainString.split(", ")
+            domain = domainString.split(", ").map { it.trim() }
         }
 
         if (domain == null) {
@@ -98,8 +101,6 @@ class BayesianNetworkBifParser(val file: String) : BayesianNetworkParser {
     }
 
     private fun parseProbability(line: String, reader: BufferedReader): ParserItem {
-
-        println("parse probability: $line")
 
         val matchResult = PATTERN_PROBABILITY.matchEntire(line)
                 ?: throw Exception("Unable to parse probability type: '$line'")

@@ -1,12 +1,8 @@
 package bayesian.sample
 
-import bayesian.core.BayesianNetwork
-import bayesian.core.MapProbabilityTable
-import bayesian.core.Node
 import bayesian.draw.openrndr.draw
-import bayesian.parser.BayesianNetworkBifParser
-import bayesian.parser.ProbabilityItem
-import bayesian.parser.VariableItem
+import bayesian.parser.parse
+import java.io.File
 
 fun main(args: Array<String>) {
     if (args.isEmpty()) {
@@ -17,62 +13,6 @@ fun main(args: Array<String>) {
 
     println("file path: $file")
 
-    data class NodeItem(val prob: ProbabilityItem, val node: Node)
-
-    val variablesMap = mutableMapOf<String, VariableItem>()
-    val nodesMap = mutableMapOf<String, NodeItem>()
-
-    val nodesList = mutableListOf<Node>()
-    val parser = BayesianNetworkBifParser(file)
-
-    parser.parse {
-
-        if (it is VariableItem) {
-            variablesMap[it.name] = it
-        } else if (it is ProbabilityItem) {
-
-            val name = it.name
-            val domain = variablesMap.getOrElse(name) {
-                throw Exception("Variable is absent: $name")
-            }.domain
-
-            val probabilityTable = mutableMapOf<List<String>, Double>()
-            for (probItem in it.probabilities) {
-                val args = probItem.arguments
-                val values = probItem.values
-
-                for ((i, domainArg) in domain.withIndex()) {
-                    val argsWithDomain = args.toMutableList()
-                    argsWithDomain.add(domainArg)
-                    probabilityTable[argsWithDomain] = values[i]
-                }
-            }
-
-            val node = Node(it.name,
-                    domain,
-                    MapProbabilityTable(probabilityTable))
-
-            nodesMap[name] = NodeItem(it, node)
-            nodesList.add(node)
-        }
-    }
-
-    for (node in nodesList) {
-        val parents = mutableListOf<Node>()
-        val nodeItem = nodesMap.getOrElse(node.name) {
-            throw Exception("Node is absent: ${node.name}")
-        }
-
-        for (parentName in nodeItem.prob.parents) {
-            val parent = nodesMap.getOrElse(parentName) {
-                throw Exception("Parent is absent: ${parentName}")
-            }
-            parents.add(parent.node)
-        }
-
-        node.parents = parents.toTypedArray()
-    }
-
-    val network = BayesianNetwork(*nodesList.toTypedArray())
+    val network = parse(File(file).toURL())
     draw(network, "Parsed Bayesian Network", 1000, 600, 30)
 }

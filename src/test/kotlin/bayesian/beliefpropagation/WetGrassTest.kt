@@ -1,7 +1,7 @@
 package bayesian.beliefpropagation
 
 import bayesian.core.*
-import bayesian.util.epsilon
+import bayesian.util.assertDoubleEquals
 import org.junit.Assert
 import org.junit.Test
 
@@ -57,12 +57,12 @@ class WetGrassTest {
                 Evidence(holmesGrass.name, "wet"),
                 Evidence(rain.name, "true"))
 
-        Assert.assertEquals(0.2, marginalizationDivisor, epsilon)
+        assertDoubleEquals(0.2, marginalizationDivisor)
 
         val marginalizationDividend = bayesianNetwork.marginalize(
                 Evidence(holmesGrass.name, "wet"))
 
-        Assert.assertEquals(0.272, marginalizationDividend, epsilon)
+        assertDoubleEquals(0.272, marginalizationDividend)
 
     }
 
@@ -73,11 +73,11 @@ class WetGrassTest {
                 Evidence(holmesGrass.name, "wet"),
                 Evidence(rain.name, "true"))
 
-        Assert.assertEquals(0.2, marginalizationDivisor, epsilon)
+        assertDoubleEquals(0.2, marginalizationDivisor)
 
         val marginalizationDividend = bayesianNetwork.beliefPropagation(
                 Evidence(holmesGrass.name, "wet"))
 
-        Assert.assertEquals(0.272, marginalizationDividend, epsilon)
+        assertDoubleEquals(0.272, marginalizationDividend)
     }
 }

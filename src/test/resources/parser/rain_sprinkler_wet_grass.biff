@@ -1,0 +1,24 @@
+network unknown {
+}
+variable rain {
+  type discrete [ 2 ] { true, false };
+}
+variable sprinkler {
+  type discrete [ 2 ] { switch_on, switch_off };
+}
+variable wet_grass {
+  type discrete [ 2 ] { wet, dry };
+}
+probability ( rain ) {
+  table 0.2, 0.8;
+}
+probability ( sprinkler | rain ) {
+  (true) 0.01, 0.99;
+  (false) 0.4, 0.6;
+}
+probability ( wet_grass | sprinkler, rain ) {
+  (switch_on, true) 0.99, 0.01;
+  (switch_on, false) 0.9, 0.1;
+  (switch_off, true) 0.8, 0.2;
+  (switch_off, false) 0.0, 1.0;
+}
