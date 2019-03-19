@@ -1,5 +1,7 @@
 package bayesian.parser
 
+import bayesian.core.Evidence
+import bayesian.core.marginalize
 import bayesian.util.assertDoubleEquals
 import bayesian.util.getResourceUrl
 import org.junit.Assert
@@ -9,10 +11,11 @@ import kotlin.test.assertTrue
 
 class RainSprinklerWetGrassTest {
 
-    @Test
-    fun test() {
+    private val file = "parser/rain_sprinkler_wet_grass.biff"
 
-        val file = "parser/rain_sprinkler_wet_grass.biff"
+    @Test
+    fun testGraphParsing() {
+
         val url = getResourceUrl(file)!!
         val network = parse(url)
         val nodes = network.nodes
@@ -50,6 +53,35 @@ class RainSprinklerWetGrassTest {
         assertDoubleEquals(0.2, wetGrass.probabilityTable[listOf("switch_off", "true", "dry")])
         assertDoubleEquals(0.0, wetGrass.probabilityTable[listOf("switch_off", "false", "wet")])
         assertDoubleEquals(1.0, wetGrass.probabilityTable[listOf("switch_off", "false", "dry")])
+    }
 
+    @Test
+    fun testMarginalization() {
+
+        val url = getResourceUrl(file)!!
+        val network = parse(url)
+
+        val rain = network.nodes[0]
+        val sprinkler = network.nodes[1]
+        val wetGrass = network.nodes[2]
+
+        // P(R=true| WG=wet)
+
+        // P(R=true, WG=wet)
+        val marginalizationDividend = network.marginalize(
+                Evidence(rain.name, "true"),
+                Evidence(wetGrass.name, "wet"))
+
+
+        assertDoubleEquals(0.1603, marginalizationDividend)
+
+
+        // P(WG=wet)
+        val marginalizationDivisor = network.marginalize(
+                Evidence(wetGrass.name, "wet"))
+
+        println("marginalizationDivisor: $marginalizationDivisor")
+
+        assertDoubleEquals(0.4483, marginalizationDivisor)
     }
 }
