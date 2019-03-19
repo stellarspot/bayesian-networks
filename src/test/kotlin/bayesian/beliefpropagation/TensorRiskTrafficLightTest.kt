@@ -1,12 +1,11 @@
 package bayesian.beliefpropagation
 
 import bayesian.core.*
+import bayesian.util.epsilon
 import org.junit.Assert
 import org.junit.Test
 
 class TensorRiskTrafficLightTest {
-
-    private val epsilon = 0.01
 
     private val trafficLightProbability = MapProbabilityTable(
             mapOf(
