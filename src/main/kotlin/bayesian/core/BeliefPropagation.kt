@@ -175,14 +175,9 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
             logger.debug("send message(v->f): $variable, ${edge.factor}, initial ${edge.message}")
         } else {
 
-            val inEdges = edges
-                    .filter { it != edge }
-                    .map {
-                        it.factor.outEdges.find { e -> e.variable == variable }
-                    }.filterNotNull()
-//            assert(inEdges.size == outEdges.size)
-
+            val inEdges = variable.inEdges.filter { it.factor != edge.factor }
             val canSendMessage = inEdges.all { it.message != null }
+
             if (canSendMessage) {
                 val tensors = inEdges
                         .map { it.message }
@@ -206,6 +201,9 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
             edge.message = factor.tensor
             logger.debug("send message(f->v): $factor, ${edge.variable}, initial: ${edge.message}")
         } else {
+
+            // in edges must have the same order as outedges
+            // they correspond to arguments order in the probability tensor
             val inEdges = edges
                     .map {
                         it.variable.outEdges.find { e -> e.factor == factor }
@@ -221,12 +219,12 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
                 var tensor = factor.tensor
 
                 for (i in (edges.size - 1 downTo 0)) {
-                    val e = inEdges[i]
                     if (i == index) {
                         if (i != 0) {
                             tensor = transposeLastAxisToFirst(tensor)
                         }
                     } else {
+                        val e = inEdges[i]
                         val message = e.message!!
                         tensor = multiplyMessage(tensor, message)
                     }
