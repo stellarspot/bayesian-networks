@@ -1,7 +1,6 @@
 package bayesian.message
 
 import bayesian.util.*
-import org.junit.Ignore
 import org.junit.Test
 import org.nd4j.linalg.factory.Nd4j
 
@@ -35,7 +34,7 @@ class TensorRiskTrafficLightTest {
         // Risk -> P1
         val messageRiskP1 = initialMessage(1)
         // P1 -> TrafficLight
-        val messageP1TrafficLight = multiplyMessage(riskEvidenceTensor, messageRiskP1)
+        val messageP1TrafficLight = multiplyTensorMessage(riskEvidenceTensor, messageRiskP1)
 
         assertTensorEquals(
                 Nd4j.create(floatArrayOf(0.1f, 0.55f, 0.95f), intArrayOf(3)),
@@ -48,7 +47,7 @@ class TensorRiskTrafficLightTest {
         val messageTrafficLightP1 = messageP2TrafficLight
 
         // P1 -> Risk
-        val messageP1Risk = multiplyMessage(
+        val messageP1Risk = multiplyTensorMessage(
                 transposeLastAxisToFirst(riskEvidenceTensor),
                 messageTrafficLightP1)
 

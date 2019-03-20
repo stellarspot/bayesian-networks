@@ -35,7 +35,7 @@ class MessageUtilTest {
         val message = Nd4j.create(floatArrayOf(2f), intArrayOf(1))
 
         assertTensorEquals(
-                multiplyMessage(tensor, message),
+                multiplyTensorMessage(tensor, message),
                 Nd4j.create(floatArrayOf(2f, 4f, 6f), intArrayOf(3)))
     }
 
@@ -46,7 +46,7 @@ class MessageUtilTest {
         val message = Nd4j.create(floatArrayOf(1f, 2f, 3f), intArrayOf(3))
 
         assertTensorEquals(
-                multiplyMessage(tensor, message),
+                multiplyTensorMessage(tensor, message),
                 Nd4j.create(floatArrayOf(14f), intArrayOf(1)))
     }
 
@@ -61,7 +61,7 @@ class MessageUtilTest {
         val message = initialMessage(1)
 
         assertTensorEquals(
-                multiplyMessage(tensor, message),
+                multiplyTensorMessage(tensor, message),
                 Nd4j.create(floatArrayOf(1f, 3f, 5f), intArrayOf(3)))
     }
 }

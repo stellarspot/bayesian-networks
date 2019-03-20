@@ -62,4 +62,25 @@ class TensorRiskTrafficLightTest {
 
         assertDoubleEquals(0.27, probabilityTrafficLihghtGivenRisk)
     }
+
+    @Test
+    fun testBeliefLoopyPropagation() {
+
+
+        val marginalizationDividend = bayesianNetwork.loopyBeliefPropagation(
+                Evidence(trafficLight.name, "yellow"),
+                Evidence(risk.name, "high"))
+
+        assertDoubleEquals(0.1375, marginalizationDividend)
+
+        val marginalizationDivisor = bayesianNetwork.loopyBeliefPropagation(
+                Evidence(risk.name, "high"))
+
+        assertDoubleEquals(0.51, marginalizationDivisor)
+
+
+        val probabilityTrafficLihghtGivenRisk = marginalizationDividend / marginalizationDivisor
+
+        assertDoubleEquals(0.27, probabilityTrafficLihghtGivenRisk)
+    }
 }

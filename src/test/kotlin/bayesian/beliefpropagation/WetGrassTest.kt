@@ -80,4 +80,19 @@ class WetGrassTest {
 
         assertDoubleEquals(0.272, marginalizationDividend)
     }
+
+    @Test
+    fun testLoopyBeliefPropagation() {
+
+        val marginalizationDivisor = bayesianNetwork.loopyBeliefPropagation(
+                Evidence(holmesGrass.name, "wet"),
+                Evidence(rain.name, "true"))
+
+        assertDoubleEquals(0.2, marginalizationDivisor)
+
+        val marginalizationDividend = bayesianNetwork.loopyBeliefPropagation(
+                Evidence(holmesGrass.name, "wet"))
+
+        assertDoubleEquals(0.272, marginalizationDividend)
+    }
 }

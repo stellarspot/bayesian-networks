@@ -2,6 +2,7 @@ package bayesian.parser
 
 import bayesian.core.Evidence
 import bayesian.core.beliefPropagation
+import bayesian.core.loopyBeliefPropagation
 import bayesian.core.marginalize
 import bayesian.util.assertDoubleEquals
 import bayesian.util.getResourceUrl
@@ -80,6 +81,39 @@ class RainSprinklerWetGrassTest {
                 Evidence(wetGrass.name, "wet"))
 
         assertDoubleEquals(0.4483, marginalizationDivisor)
+    }
+
+    @Test
+    fun testLoopyBeliefPropagation() {
+
+        val network = getNetwork()
+
+        val rain = network.nodes[0]
+        val sprinkler = network.nodes[1]
+        val wetGrass = network.nodes[2]
+
+        // P(R=true| WG=wet)
+
+        // P(R=true, WG=wet)
+//        val marginalizationDividend = network.loopyBeliefPropagation(
+//                Evidence(rain.name, "true"),
+//                Evidence(wetGrass.name, "wet"))
+//
+//
+//        assertDoubleEquals(0.1603, marginalizationDividend)
+
+
+        for (i in (1..60 )) {
+//        for (i in (10..120 step 5)) {
+            val marginalizationDividend = network.loopyBeliefPropagation(
+                    maxSteps = i,
+                    evidences = *arrayOf(
+                            Evidence(rain.name, "true"),
+                            Evidence(wetGrass.name, "wet")))
+
+            println("marginalizationDividend [$i] = $marginalizationDividend")
+        }
+
     }
 
     private fun getNetwork() = parse(getResourceUrl(file)!!)

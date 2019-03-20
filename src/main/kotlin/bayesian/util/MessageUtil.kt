@@ -5,11 +5,32 @@ import org.nd4j.linalg.factory.Nd4j
 
 fun initialMessage(size: Int): INDArray = Nd4j.create(FloatArray(size) { 1f }, intArrayOf(size))
 
-fun multiplyMessage(tensor: INDArray, message: INDArray): INDArray {
+fun multiplyTensorMessage(tensor: INDArray, message: INDArray): INDArray {
     val tensorIndex = tensor.shape().size - 1
     val result = Nd4j.tensorMmul(tensor, message, arrayOf(intArrayOf(tensorIndex), intArrayOf(0)))
     return result.reshape(result.shape().dropLast(1).map { it.toInt() }.toIntArray())
 
+}
+
+fun multiplyTensorMessages(tensor: INDArray, index: Int, vararg messages: INDArray?): INDArray {
+
+    var result = tensor
+
+    for (i in (messages.size - 1 downTo 0)) {
+        if (i == index) {
+            if (i != 0) {
+                result = transposeLastAxisToFirst(result)
+            }
+        } else {
+            result = multiplyTensorMessage(result, messages[i]!!)
+        }
+    }
+
+    return result
+}
+
+fun multiplyMessageElementWise(message1: INDArray, message2: INDArray): INDArray {
+    return message1.mul(message2)
 }
 
 fun transposeLastAxisToFirst(tensor: INDArray): INDArray {

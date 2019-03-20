@@ -1,9 +1,6 @@
 package bayesian.core
 
-import bayesian.util.initialMessage
-import bayesian.util.multiplyMessage
-import bayesian.util.takeTensor
-import bayesian.util.transposeLastAxisToFirst
+import bayesian.util.*
 import org.nd4j.linalg.api.ndarray.INDArray
 import org.nd4j.linalg.factory.Nd4j
 import org.slf4j.LoggerFactory
@@ -19,6 +16,19 @@ fun BayesianNetwork.beliefPropagation(vararg evidences: Evidence): Double {
     graph.applyEvidences(*evidences)
     // graph.dump()
     graph.sendMessages()
+    return graph.calculateMarginalization(*evidences)
+}
+
+fun BayesianNetwork.loopyBeliefPropagation(vararg evidences: Evidence, maxSteps: Int = 100): Double {
+
+    if (evidences.isEmpty()) {
+        return 1.0
+    }
+
+    val graph = FactorGraph(this)
+    graph.applyEvidences(*evidences)
+    graph.dump()
+    graph.sendLoopyMessages(maxSteps)
     return graph.calculateMarginalization(*evidences)
 }
 
@@ -170,6 +180,37 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
         } while (!finished)
     }
 
+    fun sendLoopyMessages(maxSteps: Int) {
+
+        val variables = variablesMap.values
+
+        for (variable in variables) {
+            for (edge in variable.outEdges) {
+                edge.message = initialMessage(variable.domainSize)
+            }
+        }
+
+
+        var step = 0
+        do {
+
+            logger.debug("step: ${step++}")
+
+            for (variable in variables) {
+                for (edge in variable.outEdges) {
+                    sendMessage(variable, edge)
+                }
+            }
+
+            for (factor in factors) {
+                for ((index, edge) in factor.outEdges.withIndex()) {
+                    sendMessage(factor, edge, index)
+                }
+            }
+
+        } while (step < maxSteps)
+    }
+
     private fun sendMessage(variable: VariableNode, edge: Edge) {
         val edges = variable.outEdges
         if (edges.size == 1) {
@@ -188,7 +229,7 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
 
                 var tensor = initialMessage(variable.domainSize)
                 for (t in tensors) {
-                    tensor = tensor.mul(t)
+                    tensor = multiplyMessageElementWise(tensor, t)
                 }
                 edge.message = tensor
                 logger.debug("send message(v->f): $variable, ${edge.factor}:\n${edge.message}")
@@ -218,21 +259,10 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
                     .all { it.message != null }
 
             if (canSendMessage) {
-                var tensor = factor.tensor
 
-                for (i in (edges.size - 1 downTo 0)) {
-                    if (i == index) {
-                        if (i != 0) {
-                            tensor = transposeLastAxisToFirst(tensor)
-                        }
-                    } else {
-                        val e = inEdges[i]
-                        val message = e.message!!
-                        tensor = multiplyMessage(tensor, message)
-                    }
-                }
-                edge.message = tensor
-                logger.debug("send message(f->v): $factor, ${edge.variable}:\n${tensor}")
+                val messages = inEdges.map { it.message }.toTypedArray()
+                edge.message = multiplyTensorMessages(factor.tensor, index, *messages)
+                logger.debug("send message(f->v): $factor, ${edge.variable}:\n${edge.message}")
             }
 
         }
@@ -251,7 +281,7 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
         val messageOut = edge.message!!
         val messageIn = edge.factor.outEdges.find { it.variable.name == variable.name }!!.message!!
 
-        val result = multiplyMessage(messageIn, messageOut).getDouble(0)
+        val result = multiplyTensorMessage(messageIn, messageOut).getDouble(0)
 
         return result
     }
