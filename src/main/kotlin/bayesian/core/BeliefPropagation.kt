@@ -141,13 +141,13 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
     }
 
     fun sendMessages() {
-        var finished = false
 
         val variables = variablesMap.values
         var step = 0
-        while (!finished && step++ < 2) {
+        do {
 
-            logger.debug("step: $step")
+            var finished = true
+            logger.debug("step: ${step++}")
 
             for (variable in variables) {
                 for (edge in variable.outEdges) {
@@ -157,6 +157,7 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
                     }
                 }
             }
+
             for (factor in factors) {
                 for ((index, edge) in factor.outEdges.withIndex()) {
                     if (edge.message == null) {
@@ -165,7 +166,8 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
                     }
                 }
             }
-        }
+
+        } while (!finished)
     }
 
     private fun sendMessage(variable: VariableNode, edge: Edge) {

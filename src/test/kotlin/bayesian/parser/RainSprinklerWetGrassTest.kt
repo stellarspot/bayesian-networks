@@ -1,6 +1,7 @@
 package bayesian.parser
 
 import bayesian.core.Evidence
+import bayesian.core.beliefPropagation
 import bayesian.core.marginalize
 import bayesian.util.assertDoubleEquals
 import bayesian.util.getResourceUrl
@@ -77,8 +78,6 @@ class RainSprinklerWetGrassTest {
         // P(WG=wet)
         val marginalizationDivisor = network.marginalize(
                 Evidence(wetGrass.name, "wet"))
-
-        println("marginalizationDivisor: $marginalizationDivisor")
 
         assertDoubleEquals(0.4483, marginalizationDivisor)
     }
