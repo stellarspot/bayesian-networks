@@ -16,8 +16,7 @@ class RainSprinklerWetGrassTest {
     @Test
     fun testGraphParsing() {
 
-        val url = getResourceUrl(file)!!
-        val network = parse(url)
+        val network = getNetwork()
         val nodes = network.nodes
 
         assertEquals(3, nodes.size)
@@ -58,8 +57,7 @@ class RainSprinklerWetGrassTest {
     @Test
     fun testMarginalization() {
 
-        val url = getResourceUrl(file)!!
-        val network = parse(url)
+        val network = getNetwork()
 
         val rain = network.nodes[0]
         val sprinkler = network.nodes[1]
@@ -84,4 +82,6 @@ class RainSprinklerWetGrassTest {
 
         assertDoubleEquals(0.4483, marginalizationDivisor)
     }
+
+    private fun getNetwork() = parse(getResourceUrl(file)!!)
 }
