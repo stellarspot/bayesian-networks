@@ -61,6 +61,10 @@ class TensorRiskTrafficLightTest {
         val probabilityTrafficLihghtGivenRisk = marginalizationDividend / marginalizationDivisor
 
         assertDoubleEquals(0.27, probabilityTrafficLihghtGivenRisk)
+
+        val marginalization = bayesianNetwork.beliefPropagation()
+
+        assertDoubleEquals(1.0, marginalization)
     }
 
     @Test

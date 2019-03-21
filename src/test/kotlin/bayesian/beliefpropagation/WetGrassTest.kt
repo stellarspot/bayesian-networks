@@ -64,6 +64,10 @@ class WetGrassTest {
 
         assertDoubleEquals(0.272, marginalizationDividend)
 
+        val marginalization = bayesianNetwork.marginalize()
+
+        assertDoubleEquals(1.0, marginalization)
+
     }
 
     @Test

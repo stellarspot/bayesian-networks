@@ -27,7 +27,7 @@ fun BayesianNetwork.loopyBeliefPropagation(vararg evidences: Evidence, maxSteps:
 
     val graph = FactorGraph(this)
     graph.applyEvidences(*evidences)
-    graph.dump()
+    // graph.dump()
     graph.sendLoopyMessages(maxSteps)
     return graph.calculateMarginalization(*evidences)
 }
