@@ -61,7 +61,7 @@ data class FactorNode(var tensor: INDArray,
     override fun toString() = "Factor-" + outEdges.map { it.variable.name }.joinToString("-")
 }
 
-data class Edge(val factor: FactorNode, val variable: VariableNode, var message: INDArray? = null)
+data class Edge(val factor: FactorNode, val variable: VariableNode, var message: INDArray? = null, var prevMessage: INDArray? = null)
 
 private fun getTensor(node: Node): INDArray {
 
@@ -186,7 +186,16 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
 
         for (variable in variables) {
             for (edge in variable.outEdges) {
+                edge.prevMessage = initialMessage(variable.domainSize)
                 edge.message = initialMessage(variable.domainSize)
+            }
+        }
+
+        for (factor in factors) {
+            if (factor.outEdges.size == 1) {
+                val edge = factor.outEdges.first()
+                edge.prevMessage = factor.tensor
+                edge.message = factor.tensor
             }
         }
 
@@ -198,13 +207,25 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
 
             for (variable in variables) {
                 for (edge in variable.outEdges) {
-                    sendMessage(variable, edge)
+                    sendLoopyMessage(variable, edge)
                 }
             }
 
             for (factor in factors) {
                 for ((index, edge) in factor.outEdges.withIndex()) {
-                    sendMessage(factor, edge, index)
+                    sendLoopyMessage(factor, edge, index)
+                }
+            }
+
+            for (variable in variables) {
+                for (edge in variable.outEdges) {
+                    edge.prevMessage = edge.message
+                }
+            }
+
+            for (factor in factors) {
+                for (edge in factor.outEdges) {
+                    edge.prevMessage = edge.message
                 }
             }
 
@@ -222,16 +243,16 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
             val canSendMessage = inEdges.all { it.message != null }
 
             if (canSendMessage) {
-                val tensors = inEdges
+                val messages = inEdges
                         .map { it.message }
                         .filterNotNull()
-                assert(tensors.size == inEdges.size)
+                assert(messages.size == inEdges.size)
 
-                var tensor = initialMessage(variable.domainSize)
-                for (t in tensors) {
-                    tensor = multiplyMessageElementWise(tensor, t)
+                var message = initialMessage(variable.domainSize)
+                for (msg in messages) {
+                    message = multiplyMessageElementWise(message, msg)
                 }
-                edge.message = tensor
+                edge.message = message
                 logger.debug("send message(v->f): $variable, ${edge.factor}:\n${edge.message}")
             }
         }
@@ -265,6 +286,47 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
                 logger.debug("send message(f->v): $factor, ${edge.variable}:\n${edge.message}")
             }
 
+        }
+    }
+
+    private fun sendLoopyMessage(variable: VariableNode, edge: Edge) {
+        val edges = variable.outEdges
+        if (edges.size == 1) {
+        } else {
+
+            val messages = variable
+                    .inEdges
+                    .filter { it.factor != edge.factor }
+                    .map { it.prevMessage }
+                    .filterNotNull()
+
+            var message = initialMessage(variable.domainSize)
+            for (msg in messages) {
+                message = multiplyMessageElementWise(message, msg)
+            }
+            edge.message = message
+            logger.debug("send message(v->f): $variable, ${edge.factor}:\n${edge.message}")
+        }
+    }
+
+
+    private fun sendLoopyMessage(factor: FactorNode, edge: Edge, index: Int) {
+
+        val edges = factor.outEdges
+        if (edges.size == 1) {
+        } else {
+
+            // in edges must have the same order as outedges
+            // they correspond to arguments order in the probability tensor
+            val inEdges = factor.outEdges
+                    .map {
+                        it.variable.outEdges.find { e -> e.factor == factor }
+                    }.filterNotNull()
+
+
+            val messages = inEdges.map { it.prevMessage }.toTypedArray()
+            edge.message = multiplyTensorMessages(factor.tensor, index, *messages)
+            logger.debug("send message(f->v): $factor, ${edge.variable}:\n${edge.message}")
         }
     }
 
