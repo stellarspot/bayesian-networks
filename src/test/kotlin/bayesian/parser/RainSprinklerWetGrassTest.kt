@@ -103,6 +103,16 @@ class RainSprinklerWetGrassTest {
 
         // P(R=true, Sprinkler=switch_on, WG=wet)
 
+        val marginalizationRWG = network.loopyBeliefPropagation(
+                maxSteps = 20,
+                evidences = *arrayOf(
+                        Evidence(rain.name, "true"),
+                        Evidence(wetGrass.name, "wet")))
+
+        println("marginalizationRWG = $marginalizationRWG")
+
+        // P(R=true, Sprinkler=switch_on, WG=wet)
+
         val marginalizationRSWG = network.loopyBeliefPropagation(
                 maxSteps = 20,
                 evidences = *arrayOf(
@@ -110,7 +120,7 @@ class RainSprinklerWetGrassTest {
                         Evidence(sprinkler.name, "switch_on"),
                         Evidence(wetGrass.name, "wet")))
 
-        println("marginalization = $marginalizationRSWG")
+        println("marginalizationRSWG = $marginalizationRSWG")
     }
 
     private fun getNetwork() = parse(getResourceUrl(file)!!)

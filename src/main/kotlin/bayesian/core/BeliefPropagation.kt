@@ -106,18 +106,21 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
                 variablesMap.getOrPut(name) { VariableNode(name) }
 
         for (node in bayesianNetwork.nodes) {
+
             val variable = getVariable(node.name)
             variable.domainSize = node.domain.size
             variablesMap[node.name] = variable
 
             val factor = FactorNode(getTensor(node))
-            variable.addEdge(factor)
             for (parent in node.parents) {
                 val v = getVariable(parent.name)
                 factor.addEdge(v)
                 v.addEdge(factor)
             }
+
             factor.addEdge(variable)
+            variable.addEdge(factor)
+
             factors.add(factor)
         }
     }
@@ -273,14 +276,7 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
             logger.debug("send message(f->v): $factor, ${edge.variable}, initial: ${edge.message}")
         } else {
 
-            // in edges must have the same order as outedges
-            // they correspond to arguments order in the probability tensor
-            val inEdges = edges
-                    .map {
-                        it.variable.outEdges.find { e -> e.factor == factor }
-                    }.filterNotNull()
-
-            assert(inEdges.size == edges.size)
+            val inEdges = factor.inEdges
 
             val canSendMessage = inEdges
                     .filterIndexed { i, _ -> i != index }
@@ -325,15 +321,7 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
             logger.debug("send message(f->v): $factor, ${edge.variable}, initial: ${edge.message}")
         } else {
 
-            // in edges must have the same order as outedges
-            // they correspond to arguments order in the probability tensor
-            val inEdges = factor.outEdges
-                    .map {
-                        it.variable.outEdges.find { e -> e.factor == factor }
-                    }.filterNotNull()
-
-
-            val messages = inEdges.map { it.prevMessage }.toTypedArray()
+            val messages = factor.inEdges.map { it.prevMessage }.toTypedArray()
             edge.message = multiplyTensorMessages(factor.tensor, index, *messages)
             logger.debug("send message(f->v): $factor, ${edge.variable}:\n${edge.message}")
         }
