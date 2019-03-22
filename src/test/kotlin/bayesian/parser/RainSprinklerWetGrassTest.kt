@@ -1,7 +1,6 @@
 package bayesian.parser
 
 import bayesian.core.Evidence
-import bayesian.core.beliefPropagation
 import bayesian.core.loopyBeliefPropagation
 import bayesian.core.marginalize
 import bayesian.util.assertDoubleEquals
@@ -65,22 +64,32 @@ class RainSprinklerWetGrassTest {
         val sprinkler = network.nodes[1]
         val wetGrass = network.nodes[2]
 
-        // P(R=true| WG=wet)
+        // P(WG=wet)
+        val marginalizationWG = network.marginalize(
+                Evidence(wetGrass.name, "wet"))
+
+        assertDoubleEquals(0.4483, marginalizationWG)
 
         // P(R=true, WG=wet)
-        val marginalizationDividend = network.marginalize(
+        val marginalizationRWG = network.marginalize(
                 Evidence(rain.name, "true"),
                 Evidence(wetGrass.name, "wet"))
 
 
-        assertDoubleEquals(0.1603, marginalizationDividend)
+        assertDoubleEquals(0.1603, marginalizationRWG)
 
-
-        // P(WG=wet)
-        val marginalizationDivisor = network.marginalize(
+        // P(R=true, Sprinkler=switch_on, WG=wet)
+        val marginalizationRSWG = network.marginalize(
+                Evidence(rain.name, "true"),
+                Evidence(sprinkler.name, "switch_on"),
                 Evidence(wetGrass.name, "wet"))
 
-        assertDoubleEquals(0.4483, marginalizationDivisor)
+        assertDoubleEquals(0.00198, marginalizationRSWG)
+
+
+        val marginalization = network.marginalize()
+
+        assertDoubleEquals(1.0, marginalization)
     }
 
     @Test
@@ -92,28 +101,16 @@ class RainSprinklerWetGrassTest {
         val sprinkler = network.nodes[1]
         val wetGrass = network.nodes[2]
 
-        // P(R=true| WG=wet)
+        // P(R=true, Sprinkler=switch_on, WG=wet)
 
-        // P(R=true, WG=wet)
-//        val marginalizationDividend = network.loopyBeliefPropagation(
-//                Evidence(rain.name, "true"),
-//                Evidence(wetGrass.name, "wet"))
-//
-//
-//        assertDoubleEquals(0.1603, marginalizationDividend)
+        val marginalizationRSWG = network.loopyBeliefPropagation(
+                maxSteps = 20,
+                evidences = *arrayOf(
+                        Evidence(rain.name, "true"),
+                        Evidence(sprinkler.name, "switch_on"),
+                        Evidence(wetGrass.name, "wet")))
 
-
-        for (i in (1..60 )) {
-//        for (i in (10..120 step 5)) {
-            val marginalizationDividend = network.loopyBeliefPropagation(
-                    maxSteps = i,
-                    evidences = *arrayOf(
-                            Evidence(rain.name, "true"),
-                            Evidence(wetGrass.name, "wet")))
-
-            println("marginalizationDividend [$i] = $marginalizationDividend")
-        }
-
+        println("marginalization = $marginalizationRSWG")
     }
 
     private fun getNetwork() = parse(getResourceUrl(file)!!)

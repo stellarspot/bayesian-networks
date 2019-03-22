@@ -28,7 +28,7 @@ fun BayesianNetwork.loopyBeliefPropagation(vararg evidences: Evidence, maxSteps:
     val graph = FactorGraph(this)
     graph.applyEvidences(*evidences)
     // graph.dump()
-    graph.sendLoopyMessages(maxSteps)
+    graph.sendLoopyMessages(maxSteps, evidences.first())
     return graph.calculateMarginalization(*evidences)
 }
 
@@ -180,7 +180,7 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
         } while (!finished)
     }
 
-    fun sendLoopyMessages(maxSteps: Int) {
+    fun sendLoopyMessages(maxSteps: Int, evidence: Evidence, threshold: Double = 0.001) {
 
         val variables = variablesMap.values
 
@@ -192,15 +192,15 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
         }
 
         for (factor in factors) {
-            if (factor.outEdges.size == 1) {
-                val edge = factor.outEdges.first()
-                edge.prevMessage = factor.tensor
-                edge.message = factor.tensor
+            for (edge in factor.outEdges) {
+                edge.prevMessage = initialMessage(edge.variable.domainSize)
+                edge.message = initialMessage(edge.variable.domainSize)
             }
         }
 
 
         var step = 0
+        var prevMarginal = -1.0
         do {
 
             logger.debug("step: ${step++}")
@@ -228,6 +228,13 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
                     edge.prevMessage = edge.message
                 }
             }
+
+            var marginal = calculateMarginalization(evidence)
+            if (Math.abs(marginal - prevMarginal) <= threshold && marginal <= 1.0) {
+                break
+            }
+
+            prevMarginal = marginal
 
         } while (step < maxSteps)
     }
@@ -314,6 +321,8 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
 
         val edges = factor.outEdges
         if (edges.size == 1) {
+            edge.message = factor.tensor
+            logger.debug("send message(f->v): $factor, ${edge.variable}, initial: ${edge.message}")
         } else {
 
             // in edges must have the same order as outedges
