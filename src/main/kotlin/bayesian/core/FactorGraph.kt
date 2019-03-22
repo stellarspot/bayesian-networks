@@ -38,8 +38,7 @@ data class FactorNode(var tensor: INDArray,
 data class Edge(val factor: FactorNode,
                 val variable: VariableNode,
                 var message: INDArray? = null,
-                var prevMessage: INDArray? = null,
-                var nextMessage: INDArray? = null)
+                var prevMessage: INDArray? = null)
 
 class FactorGraph(val bayesianNetwork: BayesianNetwork) {
 
@@ -78,7 +77,7 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
             val name = evidence.name
             val variable = variablesMap[name]!!
             variable.domainSize = 1
-            val node = bayesianNetwork[name]!!
+            val node = bayesianNetwork[name]
 
             val evidenceIndex = node.domain.indexOf(evidence.value)
             if (evidenceIndex < 0) {
@@ -104,15 +103,14 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
 
     fun calculateMarginalization(vararg evidences: Evidence): Double {
 
-        val evidence = evidences[0]
+        val evidence = evidences.first()
 
         val variable = variablesMap.getOrElse(evidence.name) {
             throw Exception("There is no node for evidence: ${evidence.name}")
         }
 
-        val edge = variable.outEdges[0]
-        val messageOut = edge.message!!
-        val messageIn = edge.factor.outEdges.find { it.variable.name == variable.name }!!.message!!
+        val messageIn = variable.inEdges.first().message!!
+        val messageOut = variable.outEdges.first().message!!
 
         val result = multiplyTensorMessage(messageIn, messageOut).getDouble(0)
 
