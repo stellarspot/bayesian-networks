@@ -61,7 +61,11 @@ data class FactorNode(var tensor: INDArray,
     override fun toString() = "Factor-" + outEdges.map { it.variable.name }.joinToString("-")
 }
 
-data class Edge(val factor: FactorNode, val variable: VariableNode, var message: INDArray? = null, var prevMessage: INDArray? = null)
+data class Edge(val factor: FactorNode,
+                val variable: VariableNode,
+                var message: INDArray? = null,
+                var prevMessage: INDArray? = null,
+                var nextMessage: INDArray? = null)
 
 private fun getTensor(node: Node): INDArray {
 
@@ -194,13 +198,6 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
             }
         }
 
-        for (factor in factors) {
-            for (edge in factor.outEdges) {
-                edge.prevMessage = initialMessage(edge.variable.domainSize)
-                edge.message = initialMessage(edge.variable.domainSize)
-            }
-        }
-
 
         var step = 0
         var prevMarginal = -1.0
@@ -221,16 +218,11 @@ class FactorGraph(val bayesianNetwork: BayesianNetwork) {
             }
 
             for (variable in variables) {
-                for (edge in variable.outEdges) {
+                for (edge in variable.inEdges + variable.outEdges) {
                     edge.prevMessage = edge.message
                 }
             }
 
-            for (factor in factors) {
-                for (edge in factor.outEdges) {
-                    edge.prevMessage = edge.message
-                }
-            }
 
             var marginal = calculateMarginalization(evidence)
             if (Math.abs(marginal - prevMarginal) <= threshold && marginal <= 1.0) {
